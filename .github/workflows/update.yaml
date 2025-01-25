@@ -25,7 +25,9 @@ jobs:
         python-version: '3.9'
 
     - name: Install dependencies
-      run: pip3 install -r requirements.txt
+      run: |
+        ls -l
+        pip3 install -r ./requirements.txt
 
     - name: Update papers
       run: |
