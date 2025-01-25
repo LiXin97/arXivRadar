@@ -17,12 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: '3.10'
 
     - name: List files
       run: |
@@ -34,10 +34,10 @@ jobs:
 
     - name: Update papers
       run: |
-        python main.py
+        python3 main.py
 
     - name: Commit and push changes
-      uses: github-actions-x/commit@v2.9
+      uses: github-actions-x/commit@v2.10
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         push-branch: 'master'
