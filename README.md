@@ -31,4 +31,3 @@ Last update: 2025-01-25
 
 ![Monthly Paper Counts for llm](papers/llm/monthly_stats.png)
 
-
