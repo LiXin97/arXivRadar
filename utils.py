@@ -8,6 +8,7 @@ import urllib, urllib.request
 
 import feedparser
 from easydict import EasyDict
+import matplotlib.pyplot as plt
 
 
 def remove_duplicated_spaces(text: str) -> str:
@@ -264,12 +265,16 @@ def write_papers_to_file(papers: List[Dict[str, str]], keyword: str, _: datetime
             return filepath
             
         # Find most recent month directory
-        months = sorted(os.listdir(base_dir), reverse=True)
+        months = [d for d in os.listdir(base_dir) 
+                 if os.path.isdir(os.path.join(base_dir, d)) and d.startswith('20')]
+        months.sort(reverse=True)
+        
         if not months:
             return None
             
         recent_dir = os.path.join(base_dir, months[0])
-        files = [f for f in os.listdir(recent_dir) if f.endswith('.md')]
+        files = [f for f in os.listdir(recent_dir) 
+                if f.endswith('.md') and (f == 'papers.md' or f.startswith('papers_'))]
         if not files:
             return None
             
@@ -381,6 +386,10 @@ def count_papers_by_keyword(keyword: str) -> Dict[str, int]:
         month_dir = os.path.join(base_dir, month)
         month_papers = []
         
+        # if month_dir is not a directory, skip
+        if not os.path.isdir(month_dir):
+            continue
+        
         # Read all markdown files in the month directory
         for filename in os.listdir(month_dir):
             if not filename.endswith('.md'):
@@ -395,3 +404,67 @@ def count_papers_by_keyword(keyword: str) -> Dict[str, int]:
             stats["total"] += len(month_papers)
             
     return stats
+
+
+def generate_monthly_stats_plot(stats: Dict[str, int], keyword: str):
+    """Generate a bar plot of monthly paper counts"""
+    # Sort months in chronological order
+    months = sorted(stats["months"].keys())
+    counts = [stats["months"][month] for month in months]
+    
+    # Create the plot
+    fig = plt.figure(figsize=(12, 6))
+    plt.bar(months, counts)
+    plt.xticks(rotation=45, ha='right')
+    plt.title(f'Monthly Paper Counts for "{keyword}"')
+    plt.xlabel('Month')
+    plt.ylabel('Number of Papers')
+    
+    # Add value labels on top of each bar
+    for i, count in enumerate(counts):
+        plt.text(i, count, str(count), ha='center', va='bottom')
+    
+    plt.tight_layout()
+    return fig
+
+
+def write_keyword_statistics(keyword: str, stats: Dict[str, int]):
+    """Write detailed statistics for a keyword to a markdown file"""
+    keyword_dir = keyword.replace(" ", "_").lower()
+    base_dir = os.path.join("papers", keyword_dir)
+    os.makedirs(base_dir, exist_ok=True)
+    
+    # Generate and save monthly stats plot
+    fig = generate_monthly_stats_plot(stats, keyword)
+    plot_path = os.path.join(base_dir, 'monthly_stats.png')
+    fig.savefig(plot_path)
+    plt.close(fig)
+    
+    # Write statistics markdown file
+    stats_path = os.path.join(base_dir, "README.md")
+    with open(stats_path, "w", encoding="utf-8") as f:
+        f.write(f"# Statistics for {keyword}\n\n")
+        
+        # Overall statistics
+        f.write("## Overall Statistics\n\n")
+        f.write(f"- Total number of papers: {stats['total']}\n")
+        f.write(f"- Number of months tracked: {len(stats['months'])}\n")
+        if stats['total'] > 0:
+            avg_papers = stats['total'] / len(stats['months'])
+            f.write(f"- Average papers per month: {avg_papers:.1f}\n")
+        
+        # Monthly trend visualization
+        f.write("\n## Monthly Trends\n\n")
+        f.write(f"![Monthly Paper Counts](monthly_stats.png)\n\n")
+        
+        # Detailed monthly breakdown
+        f.write("## Monthly Breakdown\n\n")
+        f.write("| Month | Paper Count | Percentage of Total |\n")
+        f.write("| --- | --- | --- |\n")
+        
+        # Sort months in reverse chronological order
+        sorted_months = sorted(stats["months"].keys(), reverse=True)
+        for month in sorted_months:
+            count = stats["months"][month]
+            percentage = (count / stats["total"] * 100) if stats["total"] > 0 else 0
+            f.write(f"| {month} | {count} | {percentage:.1f}% |\n")

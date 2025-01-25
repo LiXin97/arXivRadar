@@ -3,6 +3,7 @@ import time
 import pytz
 import os
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 from utils import (
     get_daily_papers_by_keyword_with_retries,
@@ -13,6 +14,8 @@ from utils import (
     get_daily_date,
     write_papers_to_file,
     count_papers_by_keyword,
+    write_keyword_statistics,
+    generate_monthly_stats_plot,
 )
 
 
@@ -62,22 +65,44 @@ with open("README.md", "w") as f_rm:
         "Click 'Watch' in the top right to receive notifications when new papers are added.\n\n"
     )
     f_rm.write(f"Last update: {current_date.strftime('%Y-%m-%d')}\n\n")
-    
+
     # Add paper statistics
     f_rm.write("## Statistics\n\n")
     f_rm.write("| Keyword | Total Papers | Latest Month Papers |\n")
     f_rm.write("| --- | --- | --- |\n")
-    
+
     for keyword in keywords:
         stats = count_papers_by_keyword(keyword)
         latest_month = next(iter(stats["months"].items()), (None, 0))
-        latest_month_str = f"{latest_month[0]} ({latest_month[1]} papers)" if latest_month[0] else "No papers"
-        
+        latest_month_str = (
+            f"{latest_month[0]} ({latest_month[1]} papers)"
+            if latest_month[0]
+            else "No papers"
+        )
         f_rm.write(f"| {keyword} | {stats['total']} | {latest_month_str} |\n")
-    
-    f_rm.write("\n## Papers\n\n")
+
+    f_rm.write("\n## Monthly Trends\n\n")
+
+    # Generate and save plots for each keyword
+    for keyword in keywords:
+        stats = count_papers_by_keyword(keyword)
+        if stats["total"] > 0:
+            fig = generate_monthly_stats_plot(stats, keyword)
+            plot_path = os.path.join(
+                "papers", keyword.replace(" ", "_").lower(), "monthly_stats.png"
+            )
+            fig.savefig(plot_path)
+            plt.close(fig)
+
+            # Add plot to README
+            relative_path = os.path.relpath(plot_path)
+            f_rm.write(f"### {keyword}\n\n")
+            f_rm.write(f"![Monthly Paper Counts for {keyword}]({relative_path})\n\n")
 
 for keyword in keywords:
+    stats = count_papers_by_keyword(keyword)
+    write_keyword_statistics(keyword, stats)
+
     if len(keyword.split()) == 1:
         link = "AND"  # for keyword with only one word
     else:
@@ -97,12 +122,6 @@ for keyword in keywords:
 
     # Write papers to keyword-specific file
     filepath = write_papers_to_file(papers, keyword, current_date)
-    
-    # Add link to README if we have a valid filepath
-    if filepath:
-        with open("README.md", "a") as f_rm:
-            relative_path = os.path.relpath(filepath)
-            f_rm.write(f"## [{keyword}]({relative_path})\n\n")
 
     time.sleep(5)  # avoid being blocked by arXiv API
 
