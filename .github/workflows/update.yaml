@@ -7,15 +7,18 @@ on:
   schedule:
     - cron: '30 16 * * *' # 00:30 Singapore time every day
   workflow_dispatch:
+  push:
+    branches: [master]
 
 permissions:
   contents: write
-  issues: write
-  pages: write
 
 jobs:
   update_daily_papers:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -37,12 +40,26 @@ jobs:
       run: |
         python3 main.py
 
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+
     - name: Generate web view
       run: |
         mkdir -p .web
         cp -r papers .web/
         cp README.md .web/index.md
-        echo "theme: jekyll-theme-cayman" > .web/_config.yml
+        
+        # Create Jekyll config
+        cat > .web/_config.yml << EOL
+        markdown: kramdown
+        remote_theme: pages-themes/cayman@v0.2.0
+        plugins:
+          - jekyll-remote-theme
+        title: arXiv Radar
+        description: An intelligent system that monitors and curates cutting-edge AI research papers from arXiv.
+        baseurl: "/arXivRadar"
+        url: "https://lixin97.github.io"
+        EOL
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
@@ -50,7 +67,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: .web
         force_orphan: true
-
+        
     - name: Commit and push changes
       uses: github-actions-x/commit@v2.9
       with:
@@ -60,8 +77,3 @@ jobs:
         files: 'README.md papers/**/*'
         name: XinLi
         email: lixin.1997.lixin@gmail.com
-
-    # - name: Create an issue to notify
-    #   uses: JasonEtco/create-an-issue@v2
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
