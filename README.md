@@ -7,15 +7,15 @@ Each monthly directory contains up to 100 papers per file for better readability
 
 Click 'Watch' in the top right to receive notifications when new papers are added.
 
-Last update: 2025-01-25
+Last update: 2025-01-30
 
 ## Statistics
 
 | Keyword | Total Papers | Latest Month Papers |
 | --- | --- | --- |
-| gaussian splatting | 1644 | 2025_01 (67 papers) |
-| embodied ai | 280 | 2025_01 (14 papers) |
-| llm | 11073 | 2025_01 (1544 papers) |
+| gaussian splatting | 1657 | 2025_01 (85 papers) |
+| embodied ai | 281 | 2025_01 (16 papers) |
+| llm | 11829 | 2025_01 (3168 papers) |
 
 ## Monthly Trends
 

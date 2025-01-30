@@ -119,87 +119,118 @@ def get_daily_papers_by_keyword(
 
 
 def generate_table(papers: List[Dict[str, str]], ignore_keys: List[str] = []) -> str:
+    if not papers:
+        return ""
+
     formatted_papers = []
-    keys = papers[0].keys()
+    # Get all possible keys from all papers
+    all_keys = set()
     for paper in papers:
-        # process fixed columns
+        all_keys.update(paper.keys())
+    all_keys = [k for k in all_keys if k not in ignore_keys]
+
+    for paper in papers:
         formatted_paper = EasyDict()
-        ## Title and Link
+
+        # Process Title and Link (required fields)
         formatted_paper.Title = (
             "**" + "[{0}]({1})".format(paper["Title"], paper["Link"]) + "**"
         )
-        ## Process Date (format: 2021-08-01T00:00:00Z -> 2021-08-01)
-        formatted_paper.Date = paper["Date"].split("T")[0]
 
-        # process other columns
-        for key in keys:
-            if key in ["Title", "Link", "Date"] or key in ignore_keys:
+        # Process other fields with fallbacks for missing data
+        for key in all_keys:
+            if key in ["Title", "Link"] or key in ignore_keys:
                 continue
-            elif key == "Abstract":
-                # add show/hide button for abstract
-                formatted_paper[key] = (
-                    "<details><summary>Show</summary><p>{0}</p></details>".format(
-                        paper[key]
-                    )
-                )
-            elif key == "Authors":
-                # NOTE only use the first author
-                formatted_paper[key] = paper[key][0] + " et al."
-            elif key == "Tags":
-                tags = ", ".join(paper[key])
-                if len(tags) > 10:
+
+            value = paper.get(key, "")  # Use empty string if field is missing
+
+            if key == "Abstract":
+                if value:
                     formatted_paper[key] = (
-                        "<details><summary>{0}...</summary><p>{1}</p></details>".format(
-                            tags[:5], tags
+                        "<details><summary>Show</summary><p>{0}</p></details>".format(
+                            value
                         )
                     )
                 else:
-                    formatted_paper[key] = tags
-            elif key == "Comment":
-                if paper[key] == "":
                     formatted_paper[key] = ""
-                elif len(paper[key]) > 20:
+            elif key == "Authors":
+                if isinstance(value, list) and value:
+                    formatted_paper[key] = value[0] + " et al."
+                else:
+                    formatted_paper[key] = value
+            elif key == "Tags":
+                if isinstance(value, list):
+                    tags = ", ".join(value)
+                    if len(tags) > 10:
+                        formatted_paper[key] = (
+                            "<details><summary>{0}...</summary><p>{1}</p></details>".format(
+                                tags[:5], tags
+                            )
+                        )
+                    else:
+                        formatted_paper[key] = tags
+                else:
+                    formatted_paper[key] = value
+            elif key == "Comment":
+                if value and len(value) > 20:
                     formatted_paper[key] = (
                         "<details><summary>{0}...</summary><p>{1}</p></details>".format(
-                            paper[key][:5], paper[key]
+                            value[:5], value
                         )
                     )
                 else:
-                    formatted_paper[key] = paper[key]
+                    formatted_paper[key] = value
+            else:
+                formatted_paper[key] = value
+
         formatted_papers.append(formatted_paper)
 
-    # generate header
-    columns = formatted_papers[0].keys()
-    # highlight headers
+    # Generate header
+    columns = list(formatted_papers[0].keys())
     columns = ["**" + column + "**" for column in columns]
     header = "| " + " | ".join(columns) + " |"
-    header = (
-        header
-        + "\n"
-        + "| "
-        + " | ".join(["---"] * len(formatted_papers[0].keys()))
-        + " |"
-    )
-    # generate the body
+    header = header + "\n" + "| " + " | ".join(["---"] * len(columns)) + " |"
+
+    # Generate body
     body = ""
     for paper in formatted_papers:
-        body += "\n| " + " | ".join(paper.values()) + " |"
+        body += "\n| " + " | ".join(str(value) for value in paper.values()) + " |"
+
     return header + body
 
 
 def back_up_files():
-    # back up README.md and ISSUE_TEMPLATE.md
-    shutil.move("README.md", "README.md.bk")
+    """Back up README.md and create if it doesn't exist"""
+    if os.path.exists("README.md"):
+        shutil.copy2("README.md", "README.md.bk")
+    else:
+        # Create empty README if it doesn't exist
+        with open("README.md", "w") as f:
+            f.write("# Daily arXiv Papers\n")
+        shutil.copy2("README.md", "README.md.bk")
 
 
 def restore_files():
-    # restore README.md and ISSUE_TEMPLATE.md
-    shutil.move("README.md.bk", "README.md")
+    """Restore README.md from backup if it exists"""
+    if os.path.exists("README.md.bk"):
+        try:
+            if os.path.exists("README.md"):
+                os.remove("README.md")
+            shutil.move("README.md.bk", "README.md")
+            print("Restored files from backup")
+        except Exception as e:
+            print(f"Error restoring backup: {str(e)}")
+            if os.path.exists("README.md.bk"):
+                print("Backup file still exists at README.md.bk")
 
 
 def remove_backups():
-    # remove README.md and ISSUE_TEMPLATE.md
-    os.remove("README.md.bk")
+    """Safely remove backup files"""
+    try:
+        if os.path.exists("README.md.bk"):
+            os.remove("README.md.bk")
+    except Exception as e:
+        print(f"Warning: Could not remove backup file: {str(e)}")
 
 
 def get_daily_date():
@@ -226,29 +257,33 @@ def get_paper_directory(keyword: str, paper_date: str) -> str:
     return paper_dir
 
 
-def write_papers_to_file(papers: List[Dict[str, str]], keyword: str, _: datetime) -> str:
+def write_papers_to_file(
+    new_papers: List[Dict[str, str]],
+    existing_papers: List[Dict[str, str]],
+    keyword: str,
+    _: datetime,
+) -> str:
     """Write papers to markdown files organized by keyword and upload date, with max 100 papers per file"""
     # Sort papers by date in descending order (newest first)
-    sorted_papers = sorted(papers, key=lambda x: x["Date"], reverse=True)
-    
+    sorted_papers = sorted(new_papers, key=lambda x: x["Date"], reverse=True)
+
     # Group papers by month
     paper_groups = {}
     for paper in sorted_papers:
         paper_date = paper["Date"]
         paper_dir = get_paper_directory(keyword, paper_date)
-        
-        # Read existing papers for this month
-        existing_papers = read_existing_papers(paper_dir)
-        
-        # Filter out papers that already exist
-        new_papers = filter_new_papers([paper], existing_papers)
-        if not new_papers:
-            continue
-            
+
+        # get existing papers in the same month
+        existing_papers_in_month = [
+            paper
+            for paper in existing_papers
+            if f"{paper['Date'].split('-')[0]}_{paper['Date'].split('-')[1]}"
+            == paper_dir.split("/")[-1]
+        ]
         if paper_dir not in paper_groups:
-            paper_groups[paper_dir] = existing_papers
-        paper_groups[paper_dir].extend(new_papers)
-    
+            paper_groups[paper_dir] = existing_papers_in_month
+        paper_groups[paper_dir].append(paper)
+
     # If no new papers were added, return the most recent existing file
     if not paper_groups:
         # Find the most recent file
@@ -257,69 +292,75 @@ def write_papers_to_file(papers: List[Dict[str, str]], keyword: str, _: datetime
         if not os.path.exists(base_dir):
             # If no papers exist at all, create an empty file
             paper_dir = get_paper_directory(keyword, sorted_papers[0]["Date"])
-            filepath = os.path.join(paper_dir, "papers.md")
+            filepath = os.path.join(paper_dir, "papers_1.md")
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(f"# {keyword}\n\n")
                 table = generate_table(sorted_papers)
                 f.write(table)
             return filepath
-            
+
         # Find most recent month directory
-        months = [d for d in os.listdir(base_dir) 
-                 if os.path.isdir(os.path.join(base_dir, d)) and d.startswith('20')]
+        months = [
+            d
+            for d in os.listdir(base_dir)
+            if os.path.isdir(os.path.join(base_dir, d)) and d.startswith("20")
+        ]
         months.sort(reverse=True)
-        
+
         if not months:
             return None
-            
+
         recent_dir = os.path.join(base_dir, months[0])
-        files = [f for f in os.listdir(recent_dir) 
-                if f.endswith('.md') and (f == 'papers.md' or f.startswith('papers_'))]
+        files = [
+            f
+            for f in os.listdir(recent_dir)
+            if f.endswith(".md") and f.startswith("papers_")
+        ]
         if not files:
             return None
-            
-        # Return first file (should be papers.md or papers_1.md)
-        return os.path.join(recent_dir, sorted(files)[0])
-    
+
+        # Return first file (papers_1.md)
+        return os.path.join(recent_dir, "papers_1.md")
+
     # Write each month's papers to files
     first_filepath = None
     for paper_dir, month_papers in paper_groups.items():
         # Sort all papers by date
         month_papers = sorted(month_papers, key=lambda x: x["Date"], reverse=True)
-        
+
         # Split papers into chunks of 100
         papers_per_file = 100
         num_files = (len(month_papers) + papers_per_file - 1) // papers_per_file
-        
+
         for i in range(num_files):
             start_idx = i * papers_per_file
             end_idx = min((i + 1) * papers_per_file, len(month_papers))
             current_papers = month_papers[start_idx:end_idx]
-            
-            # Generate filename
-            filename = f"papers_{i+1}.md" if num_files > 1 else "papers.md"
+
+            # Generate filename (always use numbered format)
+            filename = f"papers_{i+1}.md"
             filepath = os.path.join(paper_dir, filename)
-            
+
             # Store first filepath to return (for README link)
             if first_filepath is None:
                 first_filepath = filepath
-            
+
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(f"# {keyword}\n\n")
                 # Add navigation links if there are multiple files
                 if num_files > 1:
                     f.write("## Navigation\n\n")
                     for j in range(num_files):
-                        nav_filename = f"papers_{j+1}.md" if num_files > 1 else "papers.md"
+                        nav_filename = f"papers_{j+1}.md"
                         if j == i:
                             f.write(f"- Part {j+1}\n")
                         else:
                             f.write(f"- [Part {j+1}]({nav_filename})\n")
                     f.write("\n## Papers\n\n")
-                
+
                 table = generate_table(current_papers)
                 f.write(table)
-    
+
     return first_filepath
 
 
@@ -328,81 +369,119 @@ def read_existing_papers(paper_dir: str) -> List[Dict[str, str]]:
     existing_papers = []
     if not os.path.exists(paper_dir):
         return existing_papers
-        
+
     # Read all markdown files in directory
     for filename in os.listdir(paper_dir):
-        if not filename.endswith('.md'):
+        if not filename.endswith(".md"):
             continue
-            
+
         filepath = os.path.join(paper_dir, filename)
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
-            
+
         # Extract paper information from markdown table
-        # Skip header lines
-        lines = content.split('\n')
+        lines = content.split("\n")
         table_start = False
+        headers = []
         for line in lines:
-            if line.startswith('| **Title**'):
+            if line.startswith("| **Title**"):
                 table_start = True
+                # Extract headers
+                headers = [h.strip("**").strip() for h in line.split("|")[1:-1]]
+                headers = [h.replace("**", "") for h in headers]
                 continue
-            if table_start and line.startswith('| **['):
+            if table_start and line.startswith("| **["):
                 # Parse paper info from table row
-                cells = line.split('|')
-                title = cells[1].strip().replace('**[', '').split('](')[0]
-                link = cells[1].strip().split('](')[1].split(')')[0]
-                date = cells[2].strip()
-                
-                paper = {
-                    'Title': title,
-                    'Link': link,
-                    'Date': date
-                }
-                existing_papers.append(paper)
-                
+                cells = line.split("|")[1:-1]  # Skip first and last empty cells
+                paper = {}
+
+                for header, cell in zip(headers, cells):
+                    cell = cell.strip()
+                    if header == "Title":
+                        # Extract title and link from markdown link format
+                        # Format: **[Title](Link)**
+                        title_link = cell.strip("**")
+                        if (
+                            "[" in title_link
+                            and "]" in title_link
+                            and "(" in title_link
+                            and ")" in title_link
+                        ):
+                            title = title_link[1:].split("](")[0]
+                            link = title_link.split("](")[1][:-1]
+                            paper["Title"] = title
+                            paper["Link"] = link
+                        else:
+                            # Skip malformed entries
+                            continue
+                    elif header == "Abstract":
+                        paper[header] = cell.strip(
+                            "<details><summary>Show</summary><p>"
+                        )
+                    else:
+                        paper[header] = cell
+
+                # Only add paper if we successfully extracted title and link
+                if "Title" in paper and "Link" in paper:
+                    # Add empty fields for missing columns
+                    for field in ["Abstract", "Authors", "Tags", "Comment", "Date"]:
+                        if field not in paper:
+                            paper[field] = ""
+                    existing_papers.append(paper)
+
     return existing_papers
 
 
-def filter_new_papers(new_papers: List[Dict[str, str]], existing_papers: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def filter_new_papers(
+    new_papers: List[Dict[str, str]], existing_papers: List[Dict[str, str]]
+) -> List[Dict[str, str]]:
     """Filter out papers that already exist in the directory"""
-    existing_links = {paper['Link'] for paper in existing_papers}
-    return [paper for paper in new_papers if paper['Link'] not in existing_links]
+    # Create set of existing links, skip papers without links
+    existing_links = {
+        paper.get("Link", "") for paper in existing_papers if "Link" in paper
+    }
+    # Only keep papers that have a link and aren't in existing_links
+    return [
+        paper
+        for paper in new_papers
+        if paper.get("Link") and paper["Link"] not in existing_links
+    ]
 
 
 def count_papers_by_keyword(keyword: str) -> Dict[str, int]:
     """Count total papers and papers by month for a given keyword"""
     keyword_dir = keyword.replace(" ", "_").lower()
     base_dir = os.path.join("papers", keyword_dir)
-    
+
     if not os.path.exists(base_dir):
         return {"total": 0, "months": {}}
-        
+
     stats = {"total": 0, "months": {}}
-    
+
     # Get all month directories
     months = sorted(os.listdir(base_dir), reverse=True)
-    
+
     for month in months:
         month_dir = os.path.join(base_dir, month)
         month_papers = []
-        
+
         # if month_dir is not a directory, skip
         if not os.path.isdir(month_dir):
             continue
-        
+
         # Read all markdown files in the month directory
         for filename in os.listdir(month_dir):
-            if not filename.endswith('.md'):
+            if not filename.endswith(".md"):
                 continue
-            
+
             # Read papers from this file
             month_papers.extend(read_existing_papers(month_dir))
-        
+
         # Add month stats
         if month_papers:
             stats["months"][month] = len(month_papers)
             stats["total"] += len(month_papers)
-            
+
     return stats
 
 
@@ -411,19 +490,19 @@ def generate_monthly_stats_plot(stats: Dict[str, int], keyword: str):
     # Sort months in chronological order
     months = sorted(stats["months"].keys())
     counts = [stats["months"][month] for month in months]
-    
+
     # Create the plot
     fig = plt.figure(figsize=(12, 6))
     plt.bar(months, counts)
-    plt.xticks(rotation=45, ha='right')
+    plt.xticks(rotation=45, ha="right")
     plt.title(f'Monthly Paper Counts for "{keyword}"')
-    plt.xlabel('Month')
-    plt.ylabel('Number of Papers')
-    
+    plt.xlabel("Month")
+    plt.ylabel("Number of Papers")
+
     # Add value labels on top of each bar
     for i, count in enumerate(counts):
-        plt.text(i, count, str(count), ha='center', va='bottom')
-    
+        plt.text(i, count, str(count), ha="center", va="bottom")
+
     plt.tight_layout()
     return fig
 
@@ -433,38 +512,63 @@ def write_keyword_statistics(keyword: str, stats: Dict[str, int]):
     keyword_dir = keyword.replace(" ", "_").lower()
     base_dir = os.path.join("papers", keyword_dir)
     os.makedirs(base_dir, exist_ok=True)
-    
+
     # Generate and save monthly stats plot
     fig = generate_monthly_stats_plot(stats, keyword)
-    plot_path = os.path.join(base_dir, 'monthly_stats.png')
+    plot_path = os.path.join(base_dir, "monthly_stats.png")
     fig.savefig(plot_path)
     plt.close(fig)
-    
+
     # Write statistics markdown file
     stats_path = os.path.join(base_dir, "README.md")
     with open(stats_path, "w", encoding="utf-8") as f:
         f.write(f"# Statistics for {keyword}\n\n")
-        
+
         # Overall statistics
         f.write("## Overall Statistics\n\n")
         f.write(f"- Total number of papers: {stats['total']}\n")
         f.write(f"- Number of months tracked: {len(stats['months'])}\n")
-        if stats['total'] > 0:
-            avg_papers = stats['total'] / len(stats['months'])
+        if stats["total"] > 0:
+            avg_papers = stats["total"] / len(stats["months"])
             f.write(f"- Average papers per month: {avg_papers:.1f}\n")
-        
+
         # Monthly trend visualization
         f.write("\n## Monthly Trends\n\n")
         f.write(f"![Monthly Paper Counts](monthly_stats.png)\n\n")
-        
+
         # Detailed monthly breakdown
         f.write("## Monthly Breakdown\n\n")
         f.write("| Month | Paper Count | Percentage of Total |\n")
         f.write("| --- | --- | --- |\n")
-        
+
         # Sort months in reverse chronological order
         sorted_months = sorted(stats["months"].keys(), reverse=True)
         for month in sorted_months:
             count = stats["months"][month]
             percentage = (count / stats["total"] * 100) if stats["total"] > 0 else 0
             f.write(f"| {month} | {count} | {percentage:.1f}% |\n")
+
+
+def read_all_existing_papers() -> Dict[str, List[Dict[str, str]]]:
+    """Read all existing papers for all keywords"""
+    papers_by_keyword = {}
+
+    if not os.path.exists("papers"):
+        return papers_by_keyword
+
+    # Iterate through keyword directories
+    for keyword_dir in os.listdir("papers"):
+        base_dir = os.path.join("papers", keyword_dir)
+        if not os.path.isdir(base_dir):
+            continue
+
+        all_papers = []
+        # Read papers from each month directory
+        for month_dir in os.listdir(base_dir):
+            month_path = os.path.join(base_dir, month_dir)
+            if os.path.isdir(month_path):
+                all_papers.extend(read_existing_papers(month_path))
+
+        papers_by_keyword[keyword_dir.replace("_", " ")] = all_papers
+
+    return papers_by_keyword
