@@ -13,9 +13,9 @@ Last update: 2025-01-30
 
 | Research Topic | Total Papers | Latest Month |
 | --- | --- | --- |
-| gaussian splatting | 100 | 2025_01 (85 papers) |
-| embodied ai | 100 | 2025_01 (16 papers) |
-| llm | 100 | 2025_01 (100 papers) |
+| gaussian splatting | 1290 | 2025_01 (85 papers) |
+| embodied ai | 281 | 2025_01 (16 papers) |
+| llm | 31884 | 2025_01 (3168 papers) |
 
 ## Monthly Trends
 

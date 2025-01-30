@@ -133,7 +133,7 @@ def generate_table(papers: List[Dict[str, str]]) -> str:
         
         # Format abstract with collapsible section and better formatting
         abstract = paper['Abstract'].replace('|', '\|').replace('\n', ' ')  # Escape pipes and newlines
-        abstract = f"<details><summary>Abstract</summary>\n\n{abstract}\n</details>"
+        abstract = f"<details><summary>Abstract</summary>{abstract}</details>"
         
         date = paper['Date']
         comment = paper.get('Comment', '').replace('|', '\|')  # Escape pipes
