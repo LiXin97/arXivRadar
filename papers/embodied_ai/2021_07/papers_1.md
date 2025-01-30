@@ -1,5 +1,13 @@
-# embodied ai
+# embodied ai - 2021_07
 
-| **Title** | **Abstract** | **Date** | **Comment** |
+## Navigation
+
+[Home](https://lixin97.github.io/arXivRadar) / [Papers](https://lixin97.github.io/arXivRadar/papers) / [embodied ai](https://lixin97.github.io/arXivRadar/papers/embodied_ai)
+
+- Part 1
+
+## Papers
+
+| **Title** | **Abstract** | **Comment** | **Date** |
 | --- | --- | --- | --- |
-| **[Megaverse: Simulating Embodied Agents at One Million Experiences per Second](http://arxiv.org/abs/2107.08170v2)** | <details><summary>Show</summary><p>We present Megaverse, a new 3D simulation platform for reinforcement learning and embodied AI research. The efficient design of our engine enables physics-based simulation with high-dimensional egocentric observations at more than 1,000,000 actions per second on a single 8-GPU node. Megaverse is up to 70x faster than DeepMind Lab in fully-shaded 3D scenes with interactive objects. We achieve this high simulation performance by leveraging batched simulation, thereby taking full advantage of the massive parallelism of modern GPUs. We use Megaverse to build a new benchmark that consists of several single-agent and multi-agent tasks covering a variety of cognitive challenges. We evaluate model-free RL on this benchmark to provide baselines and facilitate future research. The source code is available at https://www.megaverse.info</p></details> | 2021-07-21 | <details><summary>Paper...</summary><p>Paper published in ICML2021</p></details> |
+| **[Megaverse: Simulating Embodied Agents at One Million Experiences per Second](http://arxiv.org/abs/2107.08170v2)** | <details><summary>Show</summary><p>We present Megaverse, a new 3D simulation platform for reinforcement learning and embodied AI research. The efficient design of our engine enables physics-based simulation with high-dimensional egocentric observations at more than 1,000,000 actions per second on a single 8-GPU node. Megaverse is up to 70x faster than DeepMind Lab in fully-shaded 3D scenes with interactive objects. We achieve this high simulation performance by leveraging batched simulation, thereby taking full advantage of the massive parallelism of modern GPUs. We use Megaverse to build a new benchmark that consists of several single-agent and multi-agent tasks covering a variety of cognitive challenges. We evaluate model-free RL on this benchmark to provide baselines and facilitate future research. The source code is available at https://www.megaverse.info</p></details> | <details><summary>Paper...</summary><p>Paper published in ICML2021</p></details> | 2021-07-21 |

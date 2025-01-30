@@ -20,6 +20,9 @@ from utils import (
 )
 
 
+HomeURL = "https://lixin97.github.io/arXivRadar"
+
+
 def main():
     try:
         beijing_timezone = pytz.timezone("Asia/Singapore")
@@ -64,7 +67,7 @@ def main():
 
             # write papers to files
             filepath = write_papers_to_file(
-                new_papers, existing_papers[keyword], keyword, current_date
+                HomeURL, new_papers, existing_papers[keyword], keyword, current_date
             )
             if filepath is None:
                 raise Exception(f"Failed to write papers for keyword: {keyword}")
@@ -75,25 +78,39 @@ def main():
             f_rm.write(
                 "An intelligent system that monitors and curates cutting-edge AI research papers from arXiv, helping you stay at the forefront of innovation.\n\n"
             )
-            f_rm.write("[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)\n\n")
+            f_rm.write(
+                "[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)\n\n"
+            )
             f_rm.write("## Features\n\n")
-            f_rm.write("- 🔄 **Real-time Updates**: Fresh research papers delivered daily\n")
-            f_rm.write("- 🎯 **Topic-focused**: Precisely curated for your research interests\n")
-            f_rm.write("- 📊 **Research Analytics**: Track publication trends and patterns\n")
-            f_rm.write("- 🗂️ **Smart Organization**: Papers neatly categorized by topics and dates\n")
-            f_rm.write("- 📱 **Mobile-friendly**: Access your research feed anywhere\n\n")
-            
+            f_rm.write(
+                "- 🔄 **Real-time Updates**: Fresh research papers delivered daily\n"
+            )
+            f_rm.write(
+                "- 🎯 **Topic-focused**: Precisely curated for your research interests\n"
+            )
+            f_rm.write(
+                "- 📊 **Research Analytics**: Track publication trends and patterns\n"
+            )
+            f_rm.write(
+                "- 🗂️ **Smart Organization**: Papers neatly categorized by topics and dates\n"
+            )
+            f_rm.write(
+                "- 📱 **Mobile-friendly**: Access your research feed anywhere\n\n"
+            )
+
             f_rm.write("## Quick Links\n\n")
             for keyword in keywords:
                 keyword_path = f"papers/{keyword.replace(' ', '_').lower()}"
                 f_rm.write(f"- [{keyword}]({keyword_path}/)\n")
             f_rm.write("\n")
-            
+
             f_rm.write("## How to Use\n\n")
-            f_rm.write("1. Click 'Watch' in the top right to receive daily notifications\n")
+            f_rm.write(
+                "1. Click 'Watch' in the top right to receive daily notifications\n"
+            )
             f_rm.write("2. Browse papers by topic in the Quick Links section\n")
             f_rm.write("3. View statistics and trends in each topic's README\n\n")
-            
+
             f_rm.write(f"Last update: {current_date.strftime('%Y-%m-%d')}\n\n")
 
             # Add paper statistics
@@ -132,8 +149,10 @@ def main():
                     f.write(f"# Statistics for {keyword}\n\n")
 
                     # Add navigation breadcrumb
-                    f.write(f"[Home](/) / [Papers](/papers) / [{keyword}](/papers/{keyword.replace(' ', '_').lower()})\n\n")
-                    
+                    f.write(
+                        f"[Home]({HomeURL}) - [Papers]({HomeURL}/papers) - [{keyword}]({HomeURL}/papers/{keyword.replace(' ', '_').lower()})\n\n"
+                    )
+
                     # Overall statistics
                     f.write("## Overall Statistics\n\n")
                     f.write(f"- Total number of papers: {stats['total']}\n")
@@ -158,13 +177,48 @@ def main():
                         percentage = (
                             (count / stats["total"] * 100) if stats["total"] > 0 else 0
                         )
-                        f.write(f"| {month} | {count} | {percentage:.1f}% |\n")
+                        f.write(
+                            f"| [{month}](./{month}/papers_1.md) | {count} | {percentage:.1f}% |\n"
+                        )
 
                     # Add plot to README
                     relative_path = os.path.relpath(plot_path)
                     f_rm.write(f"### {keyword}\n\n")
                     f_rm.write(
                         f"![Monthly Paper Counts for {keyword}]({relative_path})\n\n"
+                    )
+
+            # Write README.md to papers/README.md
+            with open("papers/README.md", "w", encoding="utf-8") as f:
+                f.write(f"# arXivRadar - arXiv Research Tracking Hub\n")
+                f.write(
+                    f"An intelligent system that monitors and curates cutting-edge AI research papers from arXiv, helping you stay at the forefront of innovation.\n\n"
+                )
+                f.write(f"## Keywords\n\n")
+                for keyword in keywords:
+                    keyword_path = f"{keyword.replace(' ', '_').lower()}"
+                    f.write(f"- [{keyword}]({keyword_path}/)\n")
+                f.write("\n")
+                f.write(f"Last update: {current_date.strftime('%Y-%m-%d')}\n\n")
+                f.write(f"## Statistics\n\n")
+                f.write(f"| Research Topic | Total Papers | Latest Month |\n")
+                f.write(f"| --- | --- | --- |\n")
+                for keyword in keywords:
+                    stats = count_papers_by_keyword(keyword)
+                    latest_month = next(iter(stats["months"].items()), (None, 0))
+                    latest_month_str = (
+                        f"{latest_month[0]} ({latest_month[1]} papers)"
+                        if latest_month[0]
+                        else "No papers"
+                    )
+                    f.write(f"| {keyword} | {stats['total']} | {latest_month_str} |\n")
+                f.write("\n")
+                f.write(f"## Monthly Trends\n\n")
+                for keyword in keywords:
+                    keyword_path = f"{keyword.replace(' ', '_').lower()}"
+                    f.write(f"### {keyword}\n\n")
+                    f.write(
+                        f"![Monthly Paper Counts for {keyword}]({keyword_path}/monthly_stats.png)\n\n"
                     )
 
         # If everything succeeded, remove backups

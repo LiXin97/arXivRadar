@@ -258,6 +258,7 @@ def get_paper_directory(keyword: str, paper_date: str) -> str:
 
 
 def write_papers_to_file(
+    home_url: str,
     new_papers: List[Dict[str, str]],
     existing_papers: List[Dict[str, str]],
     keyword: str,
@@ -346,17 +347,16 @@ def write_papers_to_file(
                 first_filepath = filepath
 
             with open(filepath, "w", encoding="utf-8") as f:
-                f.write(f"# {keyword}\n\n")
-                # Add navigation links if there are multiple files
-                if num_files > 1:
-                    f.write("## Navigation\n\n")
-                    for j in range(num_files):
-                        nav_filename = f"papers_{j+1}.md"
-                        if j == i:
-                            f.write(f"- Part {j+1}\n")
-                        else:
-                            f.write(f"- [Part {j+1}]({nav_filename})\n")
-                    f.write("\n## Papers\n\n")
+                f.write(f"# {keyword} - {paper_dir.split('/')[-1]}\n\n")
+                f.write("## Navigation\n\n")
+                f.write(f"[Home]({home_url}) / [Papers]({home_url}/papers) / [{keyword}]({home_url}/papers/{keyword.replace(' ', '_').lower()})\n\n")
+                for j in range(num_files):
+                    nav_filename = f"papers_{j+1}.md"
+                    if j == i:
+                        f.write(f"- Part {j+1}\n")
+                    else:
+                        f.write(f"- [Part {j+1}]({nav_filename})\n")
+                f.write("\n## Papers\n\n")
 
                 table = generate_table(current_papers)
                 f.write(table)
