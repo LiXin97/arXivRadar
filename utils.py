@@ -137,7 +137,10 @@ def generate_table(papers: List[Dict[str, str]]) -> str:
         
         date = paper['Date']
         comment = paper.get('Comment', '').replace('|', '\|')  # Escape pipes
-        comment = f"<details>{comment}</details>"
+        if comment: 
+            comment = f"<details>{comment}</details>"
+        else:
+            comment = ""
         
         # Add row with proper escaping and formatting
         table += f"| {title} | {abstract} | {date} | {comment} |\n"
