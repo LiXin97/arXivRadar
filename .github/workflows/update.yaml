@@ -39,32 +39,6 @@ jobs:
     - name: Update papers
       run: |
         python3 main.py
-
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-
-    - name: Generate web view
-      run: |
-        mkdir -p .web
-        cp -r papers .web/
-        cp README.md .web/index.md
-        
-        # Create Jekyll config
-        cat > .web/_config.yml << EOL
-        markdown: kramdown
-        remote_theme: pages-themes/cayman@v0.2.0
-        plugins:
-          - jekyll-remote-theme
-        title: arXiv Radar
-        description: An intelligent system that monitors and curates cutting-edge AI research papers from arXiv.
-        EOL
-
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: .web
-        force_orphan: true
         
     - name: Commit and push changes
       uses: github-actions-x/commit@v2.9

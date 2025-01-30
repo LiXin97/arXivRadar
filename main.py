@@ -85,8 +85,8 @@ def main():
             
             f_rm.write("## Quick Links\n\n")
             for keyword in keywords:
-                keyword_path = os.path.join("papers", keyword.replace(" ", "_").lower(), "README.md")
-                f_rm.write(f"- [{keyword}]({keyword_path})\n")
+                keyword_path = f"papers/{keyword.replace(' ', '_').lower()}"
+                f_rm.write(f"- [{keyword}]({keyword_path}/)\n")
             f_rm.write("\n")
             
             f_rm.write("## How to Use\n\n")
@@ -131,6 +131,9 @@ def main():
                 with open(stats_path, "w", encoding="utf-8") as f:
                     f.write(f"# Statistics for {keyword}\n\n")
 
+                    # Add navigation breadcrumb
+                    f.write(f"[Home](/) / [Papers](/papers) / [{keyword}](/papers/{keyword.replace(' ', '_').lower()})\n\n")
+                    
                     # Overall statistics
                     f.write("## Overall Statistics\n\n")
                     f.write(f"- Total number of papers: {stats['total']}\n")
