@@ -57,8 +57,6 @@ jobs:
           - jekyll-remote-theme
         title: arXiv Radar
         description: An intelligent system that monitors and curates cutting-edge AI research papers from arXiv.
-        baseurl: "/arXivRadar"
-        url: "https://lixin97.github.io"
         EOL
 
     - name: Deploy to GitHub Pages
