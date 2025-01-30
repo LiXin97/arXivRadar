@@ -28,7 +28,9 @@ def main():
         # Create papers directory if it doesn't exist
         os.makedirs("papers", exist_ok=True)
         for keyword in keywords:
-            os.makedirs(os.path.join("papers", keyword.replace(" ", "_").lower()), exist_ok=True)
+            os.makedirs(
+                os.path.join("papers", keyword.replace(" ", "_").lower()), exist_ok=True
+            )
 
         # Backup files before making any changes
         back_up_files()
@@ -50,11 +52,14 @@ def main():
 
             papers = sorted(papers, key=lambda x: x["Date"], reverse=True)
 
+            existing_papers_by_keyword_links = [
+                paper["Link"] for paper in existing_papers[keyword]
+            ]
             # merge papers with existing papers by link
             new_papers = [
                 paper
                 for paper in papers
-                if paper["Link"] not in existing_papers[keyword]
+                if paper["Link"] not in existing_papers_by_keyword_links
             ]
 
             # write papers to files
@@ -108,6 +113,39 @@ def main():
                     )
                     fig.savefig(plot_path)
                     plt.close(fig)
+
+                # Write statistics markdown file
+                stats_path = os.path.join(
+                    "papers", keyword.replace(" ", "_").lower(), "README.md"
+                )
+                with open(stats_path, "w", encoding="utf-8") as f:
+                    f.write(f"# Statistics for {keyword}\n\n")
+
+                    # Overall statistics
+                    f.write("## Overall Statistics\n\n")
+                    f.write(f"- Total number of papers: {stats['total']}\n")
+                    f.write(f"- Number of months tracked: {len(stats['months'])}\n")
+                    if stats["total"] > 0:
+                        avg_papers = stats["total"] / len(stats["months"])
+                        f.write(f"- Average papers per month: {avg_papers:.1f}\n")
+
+                    # Monthly trend visualization
+                    f.write("\n## Monthly Trends\n\n")
+                    f.write(f"![Monthly Paper Counts](monthly_stats.png)\n\n")
+
+                    # Detailed monthly breakdown
+                    f.write("## Monthly Breakdown\n\n")
+                    f.write("| Month | Paper Count | Percentage of Total |\n")
+                    f.write("| --- | --- | --- |\n")
+
+                    # Sort months in reverse chronological order
+                    sorted_months = sorted(stats["months"].keys(), reverse=True)
+                    for month in sorted_months:
+                        count = stats["months"][month]
+                        percentage = (
+                            (count / stats["total"] * 100) if stats["total"] > 0 else 0
+                        )
+                        f.write(f"| {month} | {count} | {percentage:.1f}% |\n")
 
                     # Add plot to README
                     relative_path = os.path.relpath(plot_path)
