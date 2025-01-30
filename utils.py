@@ -118,85 +118,30 @@ def get_daily_papers_by_keyword(
     return papers
 
 
-def generate_table(papers: List[Dict[str, str]], ignore_keys: List[str] = []) -> str:
+def generate_table(papers: List[Dict[str, str]]) -> str:
+    """Generate markdown table with papers"""
     if not papers:
-        return ""
-
-    formatted_papers = []
-    # Get all possible keys from all papers
-    all_keys = set()
+        return "No papers found.\n"
+        
+    table = "| **Title** | **Abstract** | **Date** | **Comment** |\n"
+    table += "| --- | --- | --- | --- |\n"
+    
     for paper in papers:
-        all_keys.update(paper.keys())
-    all_keys = [k for k in all_keys if k not in ignore_keys]
-
-    for paper in papers:
-        formatted_paper = EasyDict()
-
-        # Process Title and Link (required fields)
-        formatted_paper.Title = (
-            "**" + "[{0}]({1})".format(paper["Title"], paper["Link"]) + "**"
-        )
-
-        # Process other fields with fallbacks for missing data
-        for key in all_keys:
-            if key in ["Title", "Link"] or key in ignore_keys:
-                continue
-
-            value = paper.get(key, "")  # Use empty string if field is missing
-
-            if key == "Abstract":
-                if value:
-                    formatted_paper[key] = (
-                        "<details><summary>Show</summary><p>{0}</p></details>".format(
-                            value
-                        )
-                    )
-                else:
-                    formatted_paper[key] = ""
-            elif key == "Authors":
-                if isinstance(value, list) and value:
-                    formatted_paper[key] = value[0] + " et al."
-                else:
-                    formatted_paper[key] = value
-            elif key == "Tags":
-                if isinstance(value, list):
-                    tags = ", ".join(value)
-                    if len(tags) > 10:
-                        formatted_paper[key] = (
-                            "<details><summary>{0}...</summary><p>{1}</p></details>".format(
-                                tags[:5], tags
-                            )
-                        )
-                    else:
-                        formatted_paper[key] = tags
-                else:
-                    formatted_paper[key] = value
-            elif key == "Comment":
-                if value and len(value) > 20:
-                    formatted_paper[key] = (
-                        "<details><summary>{0}...</summary><p>{1}</p></details>".format(
-                            value[:5], value
-                        )
-                    )
-                else:
-                    formatted_paper[key] = value
-            else:
-                formatted_paper[key] = value
-
-        formatted_papers.append(formatted_paper)
-
-    # Generate header
-    columns = list(formatted_papers[0].keys())
-    columns = ["**" + column + "**" for column in columns]
-    header = "| " + " | ".join(columns) + " |"
-    header = header + "\n" + "| " + " | ".join(["---"] * len(columns)) + " |"
-
-    # Generate body
-    body = ""
-    for paper in formatted_papers:
-        body += "\n| " + " | ".join(str(value) for value in paper.values()) + " |"
-
-    return header + body
+        # Clean and format fields
+        title = paper['Title'].replace('|', '\|')  # Escape pipe characters
+        title = f"**[{title}]({paper['Link']})**"
+        
+        # Format abstract with collapsible section and better formatting
+        abstract = paper['Abstract'].replace('|', '\|').replace('\n', ' ')  # Escape pipes and newlines
+        abstract = f"<details><summary>Abstract</summary>\n\n{abstract}\n</details>"
+        
+        date = paper['Date']
+        comment = paper.get('Comment', '').replace('|', '\|')  # Escape pipes
+        
+        # Add row with proper escaping and formatting
+        table += f"| {title} | {abstract} | {date} | {comment} |\n"
+    
+    return table
 
 
 def back_up_files():

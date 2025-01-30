@@ -4,6 +4,7 @@ import pytz
 import os
 from datetime import datetime
 import matplotlib.pyplot as plt
+from typing import List
 
 from utils import (
     get_daily_papers_by_keyword_with_retries,
@@ -23,7 +24,7 @@ from utils import (
 HomeURL = "https://lixin97.github.io/arXivRadar"
 
 
-def main():
+def main(keywords: List[str], max_result: int, column_names: List[str]):
     try:
         beijing_timezone = pytz.timezone("Asia/Singapore")
         current_date = datetime.now(beijing_timezone)
@@ -234,4 +235,4 @@ if __name__ == "__main__":
     keywords = ["gaussian splatting", "embodied ai", "llm"]
     max_result = 100
     column_names = ["Title", "Link", "Abstract", "Date", "Comment"]
-    main()
+    main(keywords, max_result, column_names)
