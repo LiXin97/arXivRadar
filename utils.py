@@ -119,32 +119,37 @@ def get_daily_papers_by_keyword(
 
 
 def generate_table(papers: List[Dict[str, str]]) -> str:
-    """Generate markdown table with papers"""
+    """Generate markdown table with papers in OpenReview bid style"""
     if not papers:
         return "No papers found.\n"
-        
-    table = "| **Title** | **Abstract** | **Date** | **Comment** |\n"
-    table += "| --- | --- | --- | --- |\n"
-    
+
+    table = "| **Paper** | **Date** | **Comment** |\n"
+    table += "| --- | --- | --- |\n"
+
     for paper in papers:
         # Clean and format fields
-        title = paper['Title'].replace('|', '\|')  # Escape pipe characters
+        title = paper["Title"].replace("|", "\|")  # Escape pipe characters
         title = f"**[{title}]({paper['Link']})**"
-        
-        # Format abstract with collapsible section and better formatting
-        abstract = paper['Abstract'].replace('|', '\|').replace('\n', ' ')  # Escape pipes and newlines
+
+        # Format abstract and add it under the title
+        abstract = paper["Abstract"].replace("|", "\|").replace("\n", " ")
         abstract = f"<details>{abstract}</details>"
-        
-        date = paper['Date']
-        comment = paper.get('Comment', '').replace('|', '\|')  # Escape pipes
-        if comment: 
+
+        # Combine title and abstract in one cell
+        paper_cell = f"{title}{abstract}"
+
+        # Format comment if it exists
+        comment = paper.get("Comment", "").replace("|", "\|")
+        if comment:
             comment = f"<details>{comment}</details>"
         else:
             comment = ""
-        
+
+        date = paper["Date"]
+
         # Add row with proper escaping and formatting
-        table += f"| {title} | {abstract} | {date} | {comment} |\n"
-    
+        table += f"| {paper_cell} | {date} | {comment} |\n"
+
     return table
 
 
@@ -298,7 +303,9 @@ def write_papers_to_file(
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(f"# {keyword} - {paper_dir.split('/')[-1]}\n\n")
                 f.write("## Navigation\n\n")
-                f.write(f"[Home]({home_url}) / [Papers]({home_url}/papers) / [{keyword}]({home_url}/papers/{keyword.replace(' ', '_').lower()})\n\n")
+                f.write(
+                    f"[Home]({home_url}) / [Papers]({home_url}/papers) / [{keyword}]({home_url}/papers/{keyword.replace(' ', '_').lower()})\n\n"
+                )
                 for j in range(num_files):
                     nav_filename = f"papers_{j+1}.md"
                     if j == i:
@@ -333,7 +340,7 @@ def read_existing_papers(paper_dir: str) -> List[Dict[str, str]]:
         table_start = False
         headers = []
         for line in lines:
-            if line.startswith("| **Title**"):
+            if line.startswith("| **Paper**"):
                 table_start = True
                 # Extract headers
                 headers = [h.strip("**").strip() for h in line.split("|")[1:-1]]
@@ -346,10 +353,10 @@ def read_existing_papers(paper_dir: str) -> List[Dict[str, str]]:
 
                 for header, cell in zip(headers, cells):
                     cell = cell.strip()
-                    if header == "Title":
+                    if header == "Paper":
                         # Extract title and link from markdown link format
                         # Format: **[Title](Link)**
-                        title_link = cell.strip("**")
+                        title_link = cell.split("**")[1]
                         if (
                             "[" in title_link
                             and "]" in title_link
@@ -363,10 +370,10 @@ def read_existing_papers(paper_dir: str) -> List[Dict[str, str]]:
                         else:
                             # Skip malformed entries
                             continue
-                    elif header == "Abstract":
-                        paper[header] = cell.strip(
-                            "<details><summary>Show</summary><p>"
-                        )
+
+                        abstract = cell.split("**")[2]  # <details>Abstract</details>
+                        abstract = abstract.strip("<details>").strip("</details>")
+                        paper["Abstract"] = abstract
                     else:
                         paper[header] = cell
 

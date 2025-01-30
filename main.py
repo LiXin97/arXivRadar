@@ -141,6 +141,8 @@ def main(keywords: List[str], max_result: int, column_names: List[str]):
                     )
                     fig.savefig(plot_path)
                     plt.close(fig)
+                else:
+                    print(f"No papers found for keyword: {keyword}")
 
                 # Write statistics markdown file
                 stats_path = os.path.join(
