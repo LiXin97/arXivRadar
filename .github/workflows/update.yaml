@@ -1,4 +1,4 @@
-name: Update
+name: Update Papers and Generate Web View
 
 on:
   # label:
@@ -10,7 +10,8 @@ on:
 
 permissions:
   contents: write
-  issues: write 
+  issues: write
+  pages: write
 
 jobs:
   update_daily_papers:
@@ -36,12 +37,26 @@ jobs:
       run: |
         python3 main.py
 
+    - name: Generate web view
+      run: |
+        mkdir -p .web
+        cp -r papers .web/
+        cp README.md .web/index.md
+        echo "theme: jekyll-theme-cayman" > .web/_config.yml
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: .web
+        force_orphan: true
+
     - name: Commit and push changes
       uses: github-actions-x/commit@v2.9
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         push-branch: 'master'
-        commit-message: '✏️ Update papers automatically.'
+        commit-message: '✏️ Update papers automatically'
         files: 'README.md papers/**/*'
         name: XinLi
         email: lixin.1997.lixin@gmail.com

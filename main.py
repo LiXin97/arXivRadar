@@ -71,24 +71,34 @@ def main():
 
         # Write to README.md
         with open("README.md", "w") as f_rm:
-            f_rm.write("# Daily arXiv Papers\n")
+            f_rm.write("# arXivRadar - arXiv Research Tracking Hub\n")
             f_rm.write(
-                "This project automatically tracks and organizes the latest arXiv papers on specific research topics.\n\n"
+                "An intelligent system that monitors and curates cutting-edge AI research papers from arXiv, helping you stay at the forefront of innovation.\n\n"
             )
-            f_rm.write(
-                "Papers are organized by keywords (like 'gaussian splatting', 'embodied ai', 'llm') and grouped by month.\n\n"
-            )
-            f_rm.write(
-                "Each monthly directory contains up to 100 papers per file for better readability.\n\n"
-            )
-            f_rm.write(
-                "Click 'Watch' in the top right to receive notifications when new papers are added.\n\n"
-            )
+            f_rm.write("[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)\n\n")
+            f_rm.write("## Features\n\n")
+            f_rm.write("- 🔄 **Real-time Updates**: Fresh research papers delivered daily\n")
+            f_rm.write("- 🎯 **Topic-focused**: Precisely curated for your research interests\n")
+            f_rm.write("- 📊 **Research Analytics**: Track publication trends and patterns\n")
+            f_rm.write("- 🗂️ **Smart Organization**: Papers neatly categorized by topics and dates\n")
+            f_rm.write("- 📱 **Mobile-friendly**: Access your research feed anywhere\n\n")
+            
+            f_rm.write("## Quick Links\n\n")
+            for keyword in keywords:
+                keyword_path = os.path.join("papers", keyword.replace(" ", "_").lower(), "README.md")
+                f_rm.write(f"- [{keyword}]({keyword_path})\n")
+            f_rm.write("\n")
+            
+            f_rm.write("## How to Use\n\n")
+            f_rm.write("1. Click 'Watch' in the top right to receive daily notifications\n")
+            f_rm.write("2. Browse papers by topic in the Quick Links section\n")
+            f_rm.write("3. View statistics and trends in each topic's README\n\n")
+            
             f_rm.write(f"Last update: {current_date.strftime('%Y-%m-%d')}\n\n")
 
             # Add paper statistics
             f_rm.write("## Statistics\n\n")
-            f_rm.write("| Keyword | Total Papers | Latest Month Papers |\n")
+            f_rm.write("| Research Topic | Total Papers | Latest Month |\n")
             f_rm.write("| --- | --- | --- |\n")
 
             for keyword in keywords:
