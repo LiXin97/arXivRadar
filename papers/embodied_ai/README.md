@@ -1,5 +1,7 @@
 # Statistics for embodied ai
 
+[Home](/) / [Papers](/papers) / [embodied ai](/papers/embodied_ai)
+
 ## Overall Statistics
 
 - Total number of papers: 281

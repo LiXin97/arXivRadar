@@ -1,5 +1,7 @@
 # Statistics for gaussian splatting
 
+[Home](/) / [Papers](/papers) / [gaussian splatting](/papers/gaussian_splatting)
+
 ## Overall Statistics
 
 - Total number of papers: 1657

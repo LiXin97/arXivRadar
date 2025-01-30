@@ -13,9 +13,9 @@ An intelligent system that monitors and curates cutting-edge AI research papers 
 
 ## Quick Links
 
-- [gaussian splatting](papers/gaussian_splatting/README.md)
-- [embodied ai](papers/embodied_ai/README.md)
-- [llm](papers/llm/README.md)
+- [gaussian splatting](papers/gaussian_splatting/)
+- [embodied ai](papers/embodied_ai/)
+- [llm](papers/llm/)
 
 ## How to Use
 
