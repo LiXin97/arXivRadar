@@ -8,6 +8,25 @@ baseurl: "/arXivRadar"
 kramdown:
   input: GFM
   hard_wrap: false
+  syntax_highlighter: rouge
 relative_links:
   enabled: true
   collections: true
+# Custom CSS for better table display
+style: |
+  .markdown-body table {
+    display: table;
+    width: 100%;
+  }
+  .markdown-body table th,
+  .markdown-body table td {
+    padding: 8px;
+    line-height: 1.4;
+  }
+  details summary {
+    cursor: pointer;
+    color: #0366d6;
+  }
+  details summary:hover {
+    text-decoration: underline;
+  }

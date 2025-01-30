@@ -49,39 +49,3 @@ jobs:
         files: 'README.md papers/**/*'
         name: XinLi
         email: lixin.1997.lixin@gmail.com
-
-    - name: Create Jekyll config
-      run: |
-        cat > .web/_config.yml << EOL
-        markdown: kramdown
-        remote_theme: pages-themes/cayman@v0.2.0
-        plugins:
-          - jekyll-remote-theme
-        title: arXiv Radar
-        description: An intelligent system that monitors and curates cutting-edge AI research papers from arXiv.
-        kramdown:
-          input: GFM
-          hard_wrap: false
-          syntax_highlighter: rouge
-        relative_links:
-          enabled: true
-          collections: true
-        # Custom CSS for better table display
-        style: |
-          .markdown-body table {
-            display: table;
-            width: 100%;
-          }
-          .markdown-body table th,
-          .markdown-body table td {
-            padding: 8px;
-            line-height: 1.4;
-          }
-          details summary {
-            cursor: pointer;
-            color: #0366d6;
-          }
-          details summary:hover {
-            text-decoration: underline;
-          }
-        EOL
