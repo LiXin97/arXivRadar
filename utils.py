@@ -377,6 +377,11 @@ def read_existing_papers(paper_dir: str) -> List[Dict[str, str]]:
                     else:
                         paper[header] = cell
 
+                comment = paper["Comment"]
+                if comment:
+                    comment = comment.strip("<details>").strip("</details>")
+                    paper["Comment"] = comment
+
                 # Only add paper if we successfully extracted title and link
                 if "Title" in paper and "Link" in paper:
                     # Add empty fields for missing columns
