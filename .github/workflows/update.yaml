@@ -40,12 +40,16 @@ jobs:
       run: |
         python3 main.py
         
+    - name: Get current date
+      id: date
+      run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
     - name: Commit and push changes
       uses: github-actions-x/commit@v2.9
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         push-branch: 'master'
-        commit-message: '✏️ Update papers automatically'
+        commit-message: '✏️ Update papers (${{ steps.date.outputs.date }})'
         files: 'README.md papers/**/*'
         name: XinLi
         email: lixin.1997.lixin@gmail.com
