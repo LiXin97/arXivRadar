@@ -4,11 +4,11 @@ on:
   # label:
   #   types:
   #     - created # for test
-  schedule:
-    - cron: '30 16 * * *' # 00:30 Singapore time every day
+  # schedule:
+    # - cron: '30 16 * * *' # 00:30 Singapore time every day
   workflow_dispatch:
-  push:
-    branches: [master]
+  # push:
+    # branches: [master]
 
 permissions:
   contents: write
